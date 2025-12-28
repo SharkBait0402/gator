@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/sharkbait0402/blog-aggregator/internal/config"
 	"fmt"
+	"os"
 )
 
 func main() {
@@ -21,6 +22,18 @@ func main() {
 
 	cmds.register("login", handlerLogin)
 
+	args := os.Args
+
+	if len(args) < 2 {
+		fmt.Println("not enough arguments")
+		os.Exit(1)
+	}
+
+	cmd:=args[1]
+
+	if cmd == "login" {
+		fmt.Printf("logging in... ")
+	}
 
 	cfg, err = config.Read()
 		if err!=nil {
