@@ -92,7 +92,7 @@ func handlerReset(s *state, cmd command) error {
 
 	err:=s.db.Reset(context.Background())
 	if err!=nil {
-		log.Pringln("error resetting database")
+		log.Println("error resetting database")
 		return err
 	}
 
@@ -117,4 +117,20 @@ func handlerUsers(s *state, cmd command) error {
 	}
 
 	return nil
+}
+
+func handlerAgg(s *state, cmd command) error {
+
+	url:="https://www.wagslane.dev/index.xml"
+	
+	feed, err:= fetchFeed(context.Background(), url)
+	if err!=nil {
+		log.Println("failed to get feed")
+		return err
+	}
+
+	fmt.Println(*feed)
+
+	return nil
+
 }
