@@ -4,6 +4,11 @@ import(
 	"context"
 	"log"
 	"fmt"
+	"github.com/sharkbait0402/blog-aggregator/internal/database"
+	"github.com/google/uuid"
+	"time"
+	"github.com/lib/pq"
+	"database/sql"
 )
 
 func scrapeFeeds(s *state) {
@@ -27,6 +32,40 @@ func scrapeFeeds(s *state) {
 		if item.Title == "" {
 			continue
 		}
+
+		layout:=time.RFC1123Z
+
+		pubDate,err:=time.Parse(layout, item.PubDate)
+		if err!=nil {
+			log.Println("error parsing pub date: ", err)
+			continue
+		}
+
+		params:=database.CreatePostParams {
+			ID: uuid.New(),
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+			Title: item.Title,
+			Url: item.Link,
+			Description: item.Description,
+			PublishedAt: sql.NullTime{
+				Time: pubDate,
+				Valid: true,
+			},
+			FeedID: nextFeed.ID,
+		}
+		
+		_,err=s.db.CreatePost(context.Background(), params)
+		if err!=nil {
+			if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == "23505"{
+				continue
+			} else {
+				log.Println("error creating post: ", err)
+				continue
+			}
+
+		}
+
 		fmt.Printf("* %v\n", item.Title)
 	}
 

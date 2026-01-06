@@ -10,6 +10,7 @@ import (
 	"github.com/sharkbait0402/blog-aggregator/internal/database"
 	"database/sql"
 	"errors"
+	"strconv"
 )
 
 func handlerLogin(s *state, cmd command) error {
@@ -292,4 +293,40 @@ func handlerUnfollow(s *state, cmd command, user database.User) error {
 
 	return err
 
+}
+
+func handlerBrowse(s *state, cmd command, user database.User) error {
+
+	var limit int32
+	limit = 2
+
+	if len(cmd.args) >=1 {
+		n, err:=strconv.Atoi(cmd.args[0])
+		if err!=nil {
+			log.Println("failed to convert arg to int: ", err)
+		} else {
+			limit = int32(n)
+		}
+	}
+
+	params:=database.GetPostsParams {
+		UserID: user.ID,
+		Limit: limit,
+	}
+
+	posts, err:=s.db.GetPosts(context.Background(), params)
+	if err!=nil {
+		log.Println("falied to get post: ", err)
+		return err
+	}
+
+
+	for _, post:=range posts {
+		fmt.Printf("* %v\n", post.Title)
+		fmt.Printf("* %v\n", post.Description)
+		fmt.Printf("* %v\n", post.PublishedAt)
+		fmt.Println("\n")
+	}
+
+	return nil
 }
