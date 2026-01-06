@@ -120,22 +120,40 @@ func handlerUsers(s *state, cmd command) error {
 }
 
 func handlerAgg(s *state, cmd command) error {
-	
-	url:="https://www.wagslane.dev/index.xml"
-	
-	feed, err:= fetchFeed(context.Background(), url)
-	if err!=nil {
-		log.Println("failed to get feed")
-		return err
+
+	if len(cmd.args) < 1 {
+		log.Println("no time bewtween req given")
+		os.Exit(1)
 	}
 
-	fmt.Println(*feed)
+	duration, err:=time.ParseDuration(cmd.args[0])
+	if err!=nil {
+		log.Println("improper time format")
+		os.Exit(1)
+	}
 
+	fmt.Printf("Collecting feeds every %v\n", cmd.args[0])
+
+	ticker := time.NewTicker(duration)
+	for ; ; <-ticker.C {
+		scrapeFeeds(s)
+	}
+
+	// url:="https://www.wagslane.dev/index.xml"
+	//
+	// feed, err:= fetchFeed(context.Background(), url)
+	// if err!=nil {
+	// 	log.Println("failed to get feed")
+	// 	return err
+	// }
+	//
+	// fmt.Println(*feed)
+	//
 	return nil
 
 }
 
-func handlerAddFeed(s *state, cmd command) error {
+func handlerAddFeed(s *state, cmd command, user database.User) error {
 
 	if len(cmd.args) < 2 {
 			log.Println("not enough args were given")
@@ -146,20 +164,14 @@ func handlerAddFeed(s *state, cmd command) error {
 	now:=time.Now()
 	name:=cmd.args[0]
 	url:=cmd.args[1]
-
-	currentUser, err:=s.db.GetUser(context.Background(), s.cfg.CurrentUserName)
-	if err!=nil {
-		log.Printf("failed to get current user: %w\n", err)
-		return err
-	}
-
+	
 	feedParams:=database.CreateFeedParams {
 		ID: id,
 		CreatedAt: now,
 		UpdatedAt: now,
 		Name: name,
 		Url: url,
-		UserID: currentUser.ID,
+		UserID: user.ID,
 	}
 
 	feed, err:=s.db.CreateFeed(context.Background(), feedParams)
@@ -172,7 +184,7 @@ func handlerAddFeed(s *state, cmd command) error {
 		ID: uuid.New(),
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
-		UserID: currentUser.ID,
+		UserID: user.ID,
 		FeedID: feed.ID,
 	}
 
@@ -205,7 +217,7 @@ func handlerFeeds(s *state, cmd command) error {
 	return nil
 }
 
-func handlerFollow(s *state, cmd command) error {
+func handlerFollow(s *state, cmd command, user database.User) error {
 
 	if len(cmd.args) == 0 {
 		log.Println("no url was given")
@@ -217,12 +229,6 @@ func handlerFollow(s *state, cmd command) error {
 	feed, err:=s.db.GetFeed(context.Background(), url)
 	if err!=nil {
 		log.Println("failed to get feed or feed does not exist")
-		return err
-	}
-
-	user, err:= s.db.GetUser(context.Background(), s.cfg.CurrentUserName)
-	if err!=nil {
-		log.Println("failed to get user or user does not exist")
 		return err
 	}
 
@@ -245,13 +251,7 @@ func handlerFollow(s *state, cmd command) error {
 	return nil
 }
 
-func handlerFollowing(s *state, cmd command) error {
-
-	user, err:=s.db.GetUser(context.Background(), s.cfg.CurrentUserName)
-	if err!=nil {
-		log.Printf("couldn't get current user: %w\n", err)
-		return err
-	}
+func handlerFollowing(s *state, cmd command, user database.User) error {
 
 	follows, err:=s.db.GetFeedFollowsForUser(context.Background(), user.ID)
 	if err!=nil {
@@ -264,4 +264,32 @@ func handlerFollowing(s *state, cmd command) error {
 	}
 
 	return nil
+}
+
+func handlerUnfollow(s *state, cmd command, user database.User) error {
+
+	if len(cmd.args) < 1 {
+		log.Println("no url was given")
+		os.Exit(1)
+	}
+
+	feed,err:=s.db.GetFeed(context.Background(), cmd.args[0])
+	if err!=nil {
+		log.Println(err)
+		return err
+	}
+
+	params:=database.UnfollowFeedForUserParams {
+		UserID: user.ID,
+		FeedID: feed.ID,
+	}
+
+	err=s.db.UnfollowFeedForUser(context.Background(), params)
+	if err!=nil {
+		log.Println(err)
+		return err
+	}
+
+	return err
+
 }
