@@ -7,7 +7,7 @@ import (
 	"time"
 	"os"
 	"log"
-	"github.com/sharkbait0402/blog-aggregator/internal/database"
+	"github.com/sharkbait0402/gator/internal/database"
 	"database/sql"
 	"errors"
 	"strconv"
@@ -323,6 +323,7 @@ func handlerBrowse(s *state, cmd command, user database.User) error {
 
 	for _, post:=range posts {
 		fmt.Printf("* %v\n", post.Title)
+		fmt.Printf("* %v\n", post.Url)
 		fmt.Printf("* %v\n", post.Description)
 		fmt.Printf("* %v\n", post.PublishedAt)
 		fmt.Println("\n")

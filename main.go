@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/sharkbait0402/blog-aggregator/internal/config"
-	"github.com/sharkbait0402/blog-aggregator/internal/database"
+	"github.com/sharkbait0402/gator/internal/config"
+	"github.com/sharkbait0402/gator/internal/database"
 	"fmt"
 	"os"
 	"database/sql"

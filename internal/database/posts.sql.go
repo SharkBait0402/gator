@@ -25,7 +25,7 @@ type CreatePostParams struct {
 	UpdatedAt   time.Time
 	Title       string
 	Url         string
-	Description string
+	Description sql.NullString
 	PublishedAt sql.NullTime
 	FeedID      uuid.UUID
 }
@@ -76,7 +76,7 @@ type GetPostsRow struct {
 	UpdatedAt   time.Time
 	Title       string
 	Url         string
-	Description string
+	Description sql.NullString
 	PublishedAt sql.NullTime
 	FeedID      uuid.UUID
 	ID_2        uuid.UUID

@@ -4,7 +4,7 @@ import(
 	"context"
 	"log"
 	"fmt"
-	"github.com/sharkbait0402/blog-aggregator/internal/database"
+	"github.com/sharkbait0402/gator/internal/database"
 	"github.com/google/uuid"
 	"time"
 	"github.com/lib/pq"
@@ -47,7 +47,10 @@ func scrapeFeeds(s *state) {
 			UpdatedAt: time.Now(),
 			Title: item.Title,
 			Url: item.Link,
-			Description: item.Description,
+			Description: sql.NullString{
+				String: item.Description,
+				Valid: true,
+			},
 			PublishedAt: sql.NullTime{
 				Time: pubDate,
 				Valid: true,
